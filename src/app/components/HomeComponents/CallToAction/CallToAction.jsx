@@ -35,6 +35,7 @@ const CallToAction = memo(() => {
             loop 
             muted 
             playsInline
+            crossOrigin="anonymous"
           >
             <source src="/assets/videos/cyberpunk.mp4" type="video/mp4" />
           </video>

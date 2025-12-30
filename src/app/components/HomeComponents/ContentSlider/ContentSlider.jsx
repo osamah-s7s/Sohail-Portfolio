@@ -267,6 +267,7 @@ const ContentSlider = () => {
                           muted
                           playsInline
                           preload="metadata"
+                          crossOrigin="anonymous"
                           className={styles['image']}
                         />
                       ) : (

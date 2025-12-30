@@ -274,6 +274,7 @@ const LandingSlider = memo(() => {
                       muted
                       playsInline
                       preload={index === activeSlide ? 'auto' : 'metadata'}
+                      crossOrigin="anonymous"
                       style={{ 
                         opacity: index === activeSlide ? 1 : 0,
                         transform: index === activeSlide ? 'scale(1)' : 'scale(1.02)',
