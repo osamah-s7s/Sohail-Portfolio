@@ -4,7 +4,6 @@ import React from 'react';
 import AboutHero from '../components/AboutMeComponents/AboutHero/AboutHero';
 import AboutMe from '../components/AboutMeComponents/AboutMe/AboutMe';
 import Skills from '../components/AboutMeComponents/Skills/Skills';
-import WakaTimeStats from '../components/AboutMeComponents/WakaTimeStats/WakaTimeStats';
 import ScrollCard from '../components/AboutMeComponents/ScrollCard/ScrollCard';
 import AboutCTA from '../components/AboutMeComponents/AboutCTA/AboutCTA';
 import ShowStart from '../components/showcase/ShowStart/ShowStart';
@@ -166,7 +165,6 @@ export default function About() {
       <AboutCTA />
       <AboutMe />
       <Skills />
-      <WakaTimeStats />
     </div>
   );
 }

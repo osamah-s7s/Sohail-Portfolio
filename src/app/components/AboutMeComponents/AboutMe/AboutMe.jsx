@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Github, Linkedin, Dribbble, Mail } from 'lucide-react';
+import { Github, Linkedin, Palette, Mail } from 'lucide-react';
 import styles from './AboutMe.module.scss';
 
 const AboutMe = () => {
@@ -11,35 +11,35 @@ const AboutMe = () => {
         <div className={styles.headerWrapper}>
           <h2 className={styles.preheading}>About Me</h2>
           <h1 className={styles.heading}>
-            Chasing progress, knowing that every step brings me{' '}
-            <span className={styles.gradient}>closer and closer</span>
+            Crafting spaces that balance beauty and function, one design at a time{' '}
+            <span className={styles.gradient}>to tell a unique story</span>
           </h1>
         </div>
 
         <div className={styles.socialLinks}>
           <div className={styles.socials}>
             <a
-              href="https://github.com/GylanSalih/"
+              href="https://github.com/sohailmuhammed"
               target="_blank"
               rel="noopener noreferrer"
             >
               <Github className={styles.icon} />
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://linkedin.com/in/sohailmuhammed"
               target="_blank"
               rel="noopener noreferrer"
             >
               <Linkedin className={styles.icon} />
             </a>
             <a
-              href="https://dribbble.com"
+              href="https://behance.net/fa22ff8e"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Dribbble className={styles.icon} />
+              <Palette className={styles.icon} />
             </a>
-            <a href="mailto:hello@portfolio.com">
+            <a href="mailto:xsohailx66@gmail.com">
               <Mail className={styles.icon} />
             </a>
           </div>
@@ -49,7 +49,7 @@ const AboutMe = () => {
           <div className={styles.profileColumn}>
             <div className={styles.imageWrapper}>
               <img
-                src="/assets/images/about/aboutme.jpg"
+                src="/assets/images/about/aboutme.png"
                 alt="Profile"
                 className={styles.profileImage}
               />
@@ -61,30 +61,28 @@ const AboutMe = () => {
               <ul>
                 <li className="profile-item">
                   <span className="profile-label">Name</span>
-                  <span className="profile-content">Gylan Salih</span>
+                  <span className="profile-content">Sohail</span>
                 </li>
                 <li className="profile-item">
                   <span className="profile-label">Profession</span>
                   <span className="profile-content">
-                    Student &amp; Freelancer
+                    Interior Designer & 3D Visualizer
                   </span>
                 </li>
                 <li className="profile-item">
                   <span className="profile-label">Hobbies</span>
                   <span className="profile-content">
-                    Collecting retro games, playing Yu-Gi-Oh, watching anime,
-                    and reading manga.
+                    Designing unique spaces, photography, and exploring new architectural trends.
                   </span>
                 </li>
                 <li className="profile-item">
-                  <span className="profile-label">Favorite Language</span>
-                  <span className="profile-content">Next.js</span>
+                  <span className="profile-label">Favorite Tool</span>
+                  <span className="profile-content">SketchUp & Enscape</span>
                 </li>
                 <li className="profile-item">
                   <span className="profile-label">Interests</span>
                   <span className="profile-content">
-                    Coding successful things :D Maybe coming in the future, I
-                    hope.
+                    Creating functional and aesthetic environments with a focus on customer satisfaction.
                   </span>
                 </li>
               </ul>
@@ -93,33 +91,23 @@ const AboutMe = () => {
             <div className={styles.opensourceWrapper}>
               <div className={styles.opensource}>
                 <div className="about-me-opensource-header">
-                  <span className={styles.opensourceBadge}>Open Source</span>
+                  <span className={styles.opensourceBadge}>Design Impact</span>
                   <h3 className={styles.opensourceTitle}>
-                    Contributions to the Open Source Community
+                    Contributions to Interior Design Community
                   </h3>
                 </div>
                 <p className={styles.opensourceText}>
-                  80+ stars on GitHub, daily updates, and improved posts and
-                  repositories - completely free for the community. Glad to
-                  assist newbie developers, designers, and creators in achieving
-                  better workflow.
+                  Designed multiple commercial spaces, including "Cool n2" ice cream cafes and "a. Fragrances" branches,
+                  ensuring cohesive branding and improved customer experience through strategic space planning and material selection.
                 </p>
               </div>
             </div>
           </div>
 
           <div className={styles.contentColumn}>
-            <h5>More Than Code</h5>
+            <h5>More Than Design</h5>
             <p className={styles.intro}>
-              Hello! You can call me Gylan Salih. I&#39;ve always had a passion
-              for development, but due to life circumstances, I never had the
-              chance to fully dive into it. Now, I finally have the security and
-              opportunity to dedicate myself entirely to something I&#39;ve
-              loved since I was young. I work as a developer, and after years of
-              learning and experimenting, I&#39;m now focusing on creating
-              projects that push me to grow. I&#39;m excited to have the chance
-              to focus fully on development and to bring my ideas to life in a
-              way I never could before.
+              Hello! I'm Sohail Muhammed. I've always been passionate about creating beautiful, functional spaces that reflect the personality and needs of those who inhabit them. Over the past three years, I've honed my skills in interior design, working on a variety of projects ranging from cafes to retail spaces. Now, I'm dedicated to delivering top-tier interior design solutions that blend aesthetics with practicality.
             </p>
 
             <h5>My Personality</h5>
@@ -131,7 +119,7 @@ const AboutMe = () => {
                   alt="Teamwork"
                 />
                 <span className={styles.techText}>
-                  Collaborative Team Player
+                  Collaborative & Client-Focused
                 </span>
               </div>
               <div className={styles.techItem}>
@@ -141,7 +129,7 @@ const AboutMe = () => {
                   alt="Problem Solving"
                 />
                 <span className={styles.techText}>
-                  Analytical & Solution-Oriented
+                  Creative & Solution-Oriented
                 </span>
               </div>
               <div className={styles.techItem}>
@@ -150,7 +138,7 @@ const AboutMe = () => {
                   src="/assets/images/about/code.svg"
                   alt="Passion"
                 />
-                <span className={styles.techText}>Driven & Passionate</span>
+                <span className={styles.techText}>Detail-Oriented & Passionate</span>
               </div>
               <div className={styles.techItem}>
                 <img
@@ -159,7 +147,7 @@ const AboutMe = () => {
                   alt="Communication"
                 />
                 <span className={styles.techText}>
-                  Friendly & Strong Communicator
+                  Strong Communicator & Team Leader
                 </span>
               </div>
             </div>
@@ -172,20 +160,14 @@ const AboutMe = () => {
                   <div className={styles.timelineHeader}>
                     <div className={styles.timelineYear}>05.2025 - Now</div>
                     <div className={styles.timelineCompany}>
-                      Voluntary Work
+                      Faizan Sultan Architect
                     </div>
                   </div>
                   <h3 className={styles.timelineTitle}>
-                    Voluntary Work for Students and Children with Migration
-                    Background
+                    Lead Designer & 3D Visualizer for Major Projects
                   </h3>
                   <p className={styles.timelineDescription}>
-                    I am currently involved in voluntary work, supporting
-                    students and children with migration backgrounds. It is a
-                    meaningful step in my life, as I help foster integration and
-                    learning opportunities for those who need it most. This
-                    experience is giving me a deeper connection to the community
-                    and shaping my understanding of diverse backgrounds.
+                    Leading design projects, focusing on delivering high-quality designs and visuals for clients.
                   </p>
                 </div>
               </div>
@@ -193,18 +175,16 @@ const AboutMe = () => {
               <div className={styles.timelineItem}>
                 <div className={styles.timelineCard}>
                   <div className={styles.timelineHeader}>
-                    <div className={styles.timelineYear}>2023 - 2025</div>
+                    <div className={styles.timelineYear}>Feb 2020 - Dec 2021</div>
                     <div className={styles.timelineCompany}>
-                      Higher Education
+                      Freelance Interior Designer
                     </div>
                   </div>
                   <h3 className={styles.timelineTitle}>
-                    Advanced Secondary Education (Fachabitur)
+                    Freelance Interior Design Projects
                   </h3>
                   <p className={styles.timelineDescription}>
-                    I am currently working towards my Fachabitur - a huge step
-                    in my life. Finally, I am making progress, finally, I have
-                    security, finally, a step towards change.
+                    Managed design projects independently, delivering customized solutions while refining my skills in project management.
                   </p>
                 </div>
               </div>
@@ -212,40 +192,16 @@ const AboutMe = () => {
               <div className={styles.timelineItem}>
                 <div className={styles.timelineCard}>
                   <div className={styles.timelineHeader}>
-                    <div className={styles.timelineYear}>
-                      02.2019 - 08.2023
-                    </div>
+                    <div className={styles.timelineYear}>2020 - Present</div>
                     <div className={styles.timelineCompany}>
-                      Higher Education
+                      Bachelor's in Interior Design
                     </div>
                   </div>
                   <h3 className={styles.timelineTitle}>
-                    Secondary School Certificate (FORQ)
+                    Studying Interior Design at Superior University
                   </h3>
                   <p className={styles.timelineDescription}>
-                    I spent many years working towards this due to life
-                    circumstances. But hey, if I made it, then you certainly can
-                    too. Just don&#39;t give up—trust me!
-                  </p>
-                </div>
-              </div>
-
-              <div className={styles.timelineItem}>
-                <div className={styles.timelineCard}>
-                  <div className={styles.timelineHeader}>
-                    <div className={styles.timelineYear}>
-                      08.2018 - 02.2019
-                    </div>
-                    <div className={styles.timelineCompany}>
-                      Higher Education
-                    </div>
-                  </div>
-                  <h3 className={styles.timelineTitle}>
-                    Extended General School Certificate
-                  </h3>
-                  <p className={styles.timelineDescription}>
-                    I started with the preparatory course, then completed grade
-                    9, and reaching grade 10 was my first real milestone.
+                    Pursuing my Bachelor's with a focus on space planning, design principles, and technical skills.
                   </p>
                 </div>
               </div>

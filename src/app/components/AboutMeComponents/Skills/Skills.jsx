@@ -3,47 +3,21 @@
 import { useState, useEffect } from 'react';
 import styles from './Skills.module.scss';
 
-const skillsData = {
-  coding: [
-    { title: 'HTML5', icon: '/assets/images/about/html.webp' },
-    { title: 'CSS3', icon: '/assets/images/about/css.webp' },
-    { title: 'SASS', icon: '/assets/images/about/sass.webp' },
-    { title: 'JavaScript', icon: '/assets/images/about/js.webp' },
-    { title: 'React', icon: '/assets/images/about/react.webp' },
-    { title: 'Next.js', icon: '/assets/images/about/nextjs.svg' },
-  ],
-  software: [
-    { title: 'Apache', icon: '/assets/images/about/apache.webp' },
-    { title: 'Linux (SSH, VPS)', icon: '/assets/images/about/Linux.webp' },
-    { title: 'Git', icon: '/assets/images/about/Git.webp' },
-    { title: 'GitHub', icon: '/assets/images/about/Github.webp' },
-  ],
-  tools: [
-    { title: 'Visual Studio Code', icon: '/assets/images/about/VSC.webp' },
-    { title: 'Figma', icon: '/assets/images/about/Figma.svg' },
-    { title: 'Adobe Photoshop', icon: '/assets/images/about/css.webp' },
-    { title: 'DaVinci Resolve', icon: '/assets/images/about/js.webp' },
-  ],
-  Design: [
-    { title: 'Blender', icon: '/assets/images/about/Blenders.webp' },
-    { title: 'WordPress', icon: '/assets/images/about/wordpress.webp' },
-    { title: 'Shopify', icon: '/assets/images/about/Shopify.png' },
-    { title: 'OBS Studio', icon: '/assets/images/about/js.webp' },
-    { title: 'Audacity', icon: '/assets/images/about/Audacity.webp' },
-  ],
-};
+const skillsData = [
+  { title: 'AutoCAD', icon: '/assets/images/about/autocad.png' },
+  { title: 'SketchUp', icon: '/assets/images/about/sketchup.png' },
+  { title: 'Enscape', icon: '/assets/images/about/enscape.png' },
+  { title: 'Figma', icon: '/assets/images/about/Figma.svg' },
+];
 
 const Skills = () => {
   const [hoveredIndex, setHoveredIndex] = useState(-1);
-  const [activeTab, setActiveTab] = useState('coding');
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // Alle Bilder vorab laden
   useEffect(() => {
     const preloadImages = async () => {
-      const allImages = Object.values(skillsData)
-        .flat()
-        .map(skill => skill.icon);
+      const allImages = skillsData.map(skill => skill.icon);
 
       try {
         await Promise.all(
@@ -71,18 +45,6 @@ const Skills = () => {
       <div className={styles.container}>
         <h2 className={styles.title}>My Skills</h2>
 
-        <div className={styles.tabs}>
-          {Object.keys(skillsData).map(category => (
-            <button
-              key={category}
-              className={`${styles.tabButton} ${activeTab === category ? styles.active : ''}`}
-              onClick={() => setActiveTab(category)}
-            >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </button>
-          ))}
-        </div>
-
         <div className={styles.grid}>
           {!imagesLoaded ? (
             // Loading-Zustand
@@ -92,7 +54,7 @@ const Skills = () => {
             </div>
           ) : (
             // Skills anzeigen, wenn alle Bilder geladen sind
-            skillsData[activeTab].map((skill, index) => (
+            skillsData.map((skill, index) => (
               <div
                 key={index}
                 className={styles.item}
