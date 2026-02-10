@@ -1,1 +1,323 @@
-//we will need to put all the source of images according to the clients needs 
+#!/usr/bin/env python3
+"""
+mine_repos.py
+
+What it does (end-to-end):
+1) Finds GitHub repositories via Search API (supports 2–3+ languages).
+2) Avoids the Search API 1000-result cap by partitioning the search into date windows.
+3) Filters repos by "activity" = minimum commits in last N days (default min_commits=1).
+4) Detects CI pipeline configs (GitHub Actions, Travis, CircleCI, GitLab CI, Jenkins, Azure Pipelines).
+5) Writes results as JSONL (one JSON per line).
+
+IMPORTANT SECURITY:
+- DO NOT hardcode your GitHub token.
+- Set it as an environment variable: GITHUB_TOKEN
+"""
+
+import os
+import re
+import time
+import json
+import argparse
+import requests
+from datetime import datetime, timedelta
+
+GITHUB_API = "https://api.github.com"
+
+
+# -----------------------------
+# HTTP helpers
+# -----------------------------
+def github_get(url, token, params=None):
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    r = requests.get(url, headers=headers, params=params, timeout=30)
+
+    # Rate limit handling (works for both Search + Core APIs)
+    if r.status_code == 403:
+        remaining = r.headers.get("X-RateLimit-Remaining")
+        reset = r.headers.get("X-RateLimit-Reset")
+        if remaining == "0" and reset:
+            sleep_for = max(0, int(reset) - int(time.time()) + 2)
+            print(f"[rate-limit] Sleeping {sleep_for}s until reset...")
+            time.sleep(sleep_for)
+            return github_get(url, token, params=params)
+
+    # If other errors, raise for visibility
+    if r.status_code >= 400 and r.status_code != 404:
+        r.raise_for_status()
+
+    return r
+
+
+# -----------------------------
+# Search query + partitioning
+# -----------------------------
+def build_query(language, min_stars, pushed_from, pushed_to, extra_terms):
+    # GitHub Search qualifiers (IMPORTANT: language must be a SINGLE language)
+    q = [
+        f"language:{language}",
+        f"stars:>={min_stars}",
+        f"pushed:{pushed_from}..{pushed_to}",
+        "fork:false",
+        "archived:false",
+    ]
+    if extra_terms:
+        q.extend(extra_terms)
+    return " ".join(q)
+
+
+def date_windows(date_from: str, date_to: str, window_days: int):
+    """Yield (start, end) date strings in YYYY-MM-DD inclusive ranges."""
+    start = datetime.strptime(date_from, "%Y-%m-%d").date()
+    end = datetime.strptime(date_to, "%Y-%m-%d").date()
+    if start > end:
+        raise ValueError("--pushed-from must be <= --pushed-to")
+
+    cur = start
+    while cur <= end:
+        win_end = min(end, cur + timedelta(days=window_days - 1))
+        yield cur.isoformat(), win_end.isoformat()
+        cur = win_end + timedelta(days=1)
+
+
+def search_repositories(token, query, per_page=100, max_pages=10, sort="stars", order="desc"):
+    url = f"{GITHUB_API}/search/repositories"
+    for page in range(1, max_pages + 1):
+        params = {
+            "q": query,
+            "sort": sort,
+            "order": order,
+            "per_page": per_page,
+            "page": page,
+        }
+        r = github_get(url, token, params=params)
+        data = r.json()
+        items = data.get("items", [])
+        print(f"[search] page={page} got={len(items)}")
+        if not items:
+            break
+        for repo in items:
+            yield repo
+        time.sleep(1.0)  # Search API is sensitive
+
+
+# -----------------------------
+# Activity filter (commits in last N days)
+# Trick: per_page=1 -> last page number ≈ number of commits (in window)
+# -----------------------------
+_LINK_LAST_RE = re.compile(r'<[^>]*[?&]page=(\d+)[^>]*>;\s*rel="last"')
+
+def commits_in_window(owner_repo: str, default_branch: str, token: str, since_iso: str) -> int:
+    """
+    Returns an estimated commit count since 'since_iso' (ISO 8601).
+    Uses Link header paging: if per_page=1, last page number == count.
+    """
+    url = f"{GITHUB_API}/repos/{owner_repo}/commits"
+    params = {
+        "sha": default_branch,
+        "since": since_iso,
+        "per_page": 1,
+        "page": 1,
+    }
+    r = github_get(url, token, params=params)
+
+    # If repo is gone/private/etc.
+    if r.status_code == 404:
+        return 0
+
+    # If no commits in window
+    data = r.json()
+    if isinstance(data, dict) and data.get("message"):
+        # some errors appear as dict; for safety:
+        return 0
+    if not data:
+        return 0
+
+    link = r.headers.get("Link", "")
+    m = _LINK_LAST_RE.search(link)
+    if m:
+        return int(m.group(1))  # with per_page=1
+    return len(data)  # 1 commit but no paging info
+
+
+# -----------------------------
+# CI detection (Contents API)
+# -----------------------------
+def exists_path(owner_repo: str, path: str, token: str, ref: str):
+    """
+    True if a file/dir exists at path. For dirs, GitHub returns a list.
+    """
+    url = f"{GITHUB_API}/repos/{owner_repo}/contents/{path}"
+    params = {"ref": ref} if ref else None
+    r = github_get(url, token, params=params)
+    if r.status_code == 200:
+        return True
+    if r.status_code == 404:
+        return False
+    r.raise_for_status()
+
+
+def detect_ci(owner_repo: str, default_branch: str, token: str):
+    ref = default_branch
+
+    signals = {
+        "github_actions": False,
+        "travis": False,
+        "circleci": False,
+        "gitlab_ci": False,
+        "jenkins": False,
+        "azure_pipelines": False,
+    }
+
+    # GitHub Actions
+    if exists_path(owner_repo, ".github/workflows", token, ref):
+        signals["github_actions"] = True
+
+    # Travis CI
+    if exists_path(owner_repo, ".travis.yml", token, ref):
+        signals["travis"] = True
+
+    # CircleCI
+    if exists_path(owner_repo, ".circleci/config.yml", token, ref):
+        signals["circleci"] = True
+
+    # GitLab CI (may exist in GitHub mirror repos too)
+    if exists_path(owner_repo, ".gitlab-ci.yml", token, ref):
+        signals["gitlab_ci"] = True
+
+    # Jenkins
+    if exists_path(owner_repo, "Jenkinsfile", token, ref) or exists_path(owner_repo, "jenkinsfile", token, ref):
+        signals["jenkins"] = True
+
+    # Azure Pipelines
+    if exists_path(owner_repo, "azure-pipelines.yml", token, ref) or exists_path(owner_repo, "azure-pipelines.yaml", token, ref):
+        signals["azure_pipelines"] = True
+
+    return signals
+
+
+# -----------------------------
+# Main
+# -----------------------------
+def main():
+    ap = argparse.ArgumentParser(
+        description="Mine GitHub repos across multiple languages, partitioned by pushed date, filter by activity, detect CI configs."
+    )
+
+    # Multi-language
+    ap.add_argument(
+        "--languages",
+        default="C++,Java,JavaScript",
+        help="Comma-separated languages (e.g., C++,Java,JavaScript)"
+    )
+
+    # Search controls
+    ap.add_argument("--min-stars", type=int, default=5, help="Minimum stars (default: 5)")
+    ap.add_argument("--pushed-from", default="2024-01-01", help="Start pushed date YYYY-MM-DD (inclusive)")
+    ap.add_argument("--pushed-to", default=datetime.utcnow().date().isoformat(), help="End pushed date YYYY-MM-DD (inclusive)")
+    ap.add_argument("--window-days", type=int, default=30, help="Date window size (days) to avoid 1000-result cap (default: 30)")
+    ap.add_argument("--max-pages", type=int, default=10, help="Max pages per query (100/page). Effective max ~10 due to GitHub 1000 cap.")
+    ap.add_argument("--extra-term", action="append", default=[], help="Extra GitHub search terms (repeatable)")
+
+    # Activity filter
+    ap.add_argument("--activity-days", type=int, default=90, help="Commit lookback window (days) (default: 90)")
+    ap.add_argument("--min-commits", type=int, default=1, help="Minimum commits in that window (default: 1)")
+
+    # CI detection
+    ap.add_argument("--detect-ci", action="store_true", help="Detect CI configs (GA/Travis/CircleCI/GitLab/Jenkins/Azure)")
+
+    # Output
+    ap.add_argument("--out", default="repos_mined.jsonl", help="Output JSONL file (default: repos_mined.jsonl)")
+
+    # Notebook/Jupyter safe: ignores extra args like -f kernel.json
+    args, _ = ap.parse_known_args()
+
+    # Validate dates
+    datetime.strptime(args.pushed_from, "%Y-%m-%d")
+    datetime.strptime(args.pushed_to, "%Y-%m-%d")
+
+    token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        raise SystemExit("Missing GITHUB_TOKEN env var. Set it first (do NOT hardcode tokens).")
+
+    languages = [l.strip() for l in args.languages.split(",") if l.strip()]
+    if not languages:
+        raise SystemExit("No languages provided.")
+
+    since_dt = datetime.utcnow() - timedelta(days=args.activity_days)
+    since_iso = since_dt.replace(microsecond=0).isoformat() + "Z"  # ISO 8601
+
+    print("[config] languages =", languages)
+    print("[config] pushed range =", args.pushed_from, "to", args.pushed_to, f"(window {args.window_days}d)")
+    print("[config] activity =", f"since {since_iso}", f"min_commits={args.min_commits}")
+    print("[config] detect_ci =", args.detect_ci)
+
+    seen = set()
+    saved = 0
+    scanned = 0
+
+    with open(args.out, "w", encoding="utf-8") as fout:
+        for language in languages:
+            for w_from, w_to in date_windows(args.pushed_from, args.pushed_to, args.window_days):
+                query = build_query(language, args.min_stars, w_from, w_to, args.extra_term)
+                print("\n[query]", query)
+
+                for repo in search_repositories(
+                    token=token,
+                    query=query,
+                    max_pages=args.max_pages
+                ):
+                    scanned += 1
+
+                    full_name = repo.get("full_name")
+                    if not full_name or full_name in seen:
+                        continue
+                    seen.add(full_name)
+
+                    default_branch = repo.get("default_branch") or "main"
+
+                    # Activity filter (min commits in last N days)
+                    commit_count = commits_in_window(full_name, default_branch, token, since_iso)
+                    if commit_count < args.min_commits:
+                        continue
+
+                    record = {
+                        "full_name": full_name,
+                        "html_url": repo.get("html_url"),
+                        "stars": repo.get("stargazers_count"),
+                        "forks": repo.get("forks_count"),
+                        "open_issues": repo.get("open_issues_count"),
+                        "language": repo.get("language"),
+                        "created_at": repo.get("created_at"),
+                        "pushed_at": repo.get("pushed_at"),
+                        "default_branch": default_branch,
+                        "owner_type": (repo.get("owner") or {}).get("type"),
+                        "license": (repo.get("license") or {}).get("spdx_id"),
+                        "activity": {
+                            "window_days": args.activity_days,
+                            "since": since_iso,
+                            "commit_count": commit_count,
+                        },
+                        "search_window": {
+                            "pushed_from": w_from,
+                            "pushed_to": w_to,
+                            "language_query": language,
+                            "min_stars": args.min_stars,
+                        },
+                    }
+
+                    if args.detect_ci:
+                        record["ci_signals"] = detect_ci(full_name, default_branch, token)
+
+                    fout.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    saved += 1
+
+    print(f"\n[done] scanned={scanned} unique={len(seen)} saved={saved} -> {args.out}")
+
+
+if __name__ == "__main__":
+    main()
