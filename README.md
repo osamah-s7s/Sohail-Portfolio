@@ -196,7 +196,7 @@ We welcome contributions to **NextJS-Portify**! 🎉 Whether it's fixing bugs, i
 1. **Fork the Repository**  
    Click on the `Fork` button at the top-right corner of this repository to create your copy.
 
-2. **Clone Your Fork**
+2. **Clone Your Fork **
 
    ```bash
    git clone https://github.com/<your-username>/NextJS-Portify.git
