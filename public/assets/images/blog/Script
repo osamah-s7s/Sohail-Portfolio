@@ -1,5 +1,7 @@
-#!/usr/bin/env python3 minig usong a token
+#!/usr/bin/env python3
 """
+
+//we dont need this code anymore 
 mine_repos.py
 
 What it does (end-to-end):
